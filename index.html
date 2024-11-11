@@ -7,22 +7,26 @@
     <style>
         body { font-family: Arial, sans-serif; }
         #ranking { margin-top: 20px; }
-        button { margin: 5px; padding: 10px; font-size: 16px; }
+        #choiceSection button { margin: 5px; padding: 10px; font-size: 16px; }
     </style>
 </head>
 <body>
     <h1>Topic Ranking System</h1>
 
     <div id="fileInputSection">
-        <p>Upload "topics.txt" file:</p>
+        <p>Upload "topics.txt" file or use default topics:</p>
         <input type="file" id="fileInput" accept=".txt">
+        <button onclick="loadDefaultTopics()">Load Default Topics</button>
     </div>
 
     <div id="choiceSection" style="display:none;">
         <p>Choose the better topic (or select Draw):</p>
-        <button id="choice1" onclick="selectWinner('choice1')">Choice 1</button>
-        <button id="choice2" onclick="selectWinner('choice2')">Choice 2</button>
-        <button onclick="selectWinner('draw')">Draw</button>
+        <div style="display: flex; justify-content: center; gap: 20px;">
+            <button id="choice1" onclick="selectWinner('choice1')">Choice 1</button>
+            <button onclick="selectWinner('draw')">Draw</button>
+            <button id="choice2" onclick="selectWinner('choice2')">Choice 2</button>
+        </div>
+        <p>Keyboard shortcuts: Left Arrow for Choice 1, Right Arrow for Choice 2, Up Arrow for Draw</p>
     </div>
 
     <div id="ranking">
@@ -31,10 +35,27 @@
     </div>
 
     <script>
+        const defaultTopics = [
+            "Ympäristö", "Ilmasto", "Kunnan velkaantuminen", "Koulut",
+            "Varhaiskasvatus", "Nuoret", "Vanhukset", "Vanhemmat",
+            "Lastensuojelu", "Kulttuuripalvelut", "Kirjastot", "Uimarannat"
+        ];
+
         const topics = [];
         let topic1, topic2;
 
         document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+        document.addEventListener('keydown', handleKeyPress);
+
+        function loadDefaultTopics() {
+            topics.length = 0; // Clear any existing topics
+            defaultTopics.forEach(topic => {
+                topics.push({ name: topic, rating: 1200, gamesPlayed: 0 });
+            });
+            displayRanking();
+            document.getElementById('choiceSection').style.display = 'block';
+            displayChoices();
+        }
 
         function handleFileUpload(event) {
             const file = event.target.files[0];
@@ -43,6 +64,7 @@
                 reader.onload = function(e) {
                     const content = e.target.result;
                     const lines = content.split('\n');
+                    topics.length = 0; // Clear existing topics
                     lines.forEach(line => {
                         const topic = line.trim();
                         if (topic) {
@@ -64,11 +86,9 @@
         }
 
         function getLessPlayedTopics() {
-            // Sort topics by games played to prioritize those with fewer games
             const sortedTopics = [...topics].sort((a, b) => a.gamesPlayed - b.gamesPlayed);
             const topic1 = sortedTopics[0];
             let topic2;
-            // Ensure topic2 is different from topic1 and has a low gamesPlayed count
             do {
                 topic2 = sortedTopics[Math.floor(Math.random() * Math.min(3, sortedTopics.length))];
             } while (topic1 === topic2);
@@ -106,7 +126,7 @@
         }
 
         function displayRanking() {
-            topics.sort((a, b) => b.rating - a.rating);  // Sort by rating for ranking display
+            topics.sort((a, b) => b.rating - a.rating);
             const rankingList = document.getElementById('rankingList');
             rankingList.innerHTML = '';
             topics.forEach(topic => {
@@ -114,6 +134,16 @@
                 listItem.textContent = `${topic.name}: ${Math.round(topic.rating)} (Played: ${topic.gamesPlayed} times)`;
                 rankingList.appendChild(listItem);
             });
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'ArrowLeft') {
+                selectWinner('choice1');
+            } else if (event.key === 'ArrowRight') {
+                selectWinner('choice2');
+            } else if (event.key === 'ArrowUp') {
+                selectWinner('draw');
+            }
         }
     </script>
 </body>
