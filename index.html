@@ -19,6 +19,12 @@
         <button onclick="loadDefaultTopics()">Load Default Topics</button>
     </div>
 
+    <div id="rankingUploadSection">
+        <p>Upload previously saved rankings:</p>
+        <input type="file" id="rankingUpload" accept=".json">
+        <button onclick="downloadRanking()">Download Current Rankings</button>
+    </div>
+
     <div id="choiceSection" style="display:none;">
         <p>Choose the better topic (or select Draw):</p>
         <div style="display: flex; justify-content: center; gap: 20px;">
@@ -36,15 +42,16 @@
 
     <script>
         const defaultTopics = [
-            "Ympäristö- ja ilmastotyö", "Kunnan vakavaraisuus", "Koulut",
-            "Varhaiskasvatus", "Nuorisopalvelut", "Vanhuspalvelut",
-            "Lastensuojelu", "Kulttuuripalvelut", "Kirjastot", "Joukkoliikenne"
+            "Ympäristö", "Ilmasto", "Kunnan velkaantuminen", "Koulut",
+            "Varhaiskasvatus", "Nuoret", "Vanhukset", "Vanhemmat",
+            "Lastensuojelu", "Kulttuuripalvelut", "Kirjastot", "Uimarannat"
         ];
 
         const topics = [];
         let topic1, topic2;
 
         document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+        document.getElementById('rankingUpload').addEventListener('change', handleRankingUpload);
         document.addEventListener('keydown', handleKeyPress);
 
         function loadDefaultTopics() {
@@ -71,6 +78,23 @@
                             topics.push({ name: topic, rating: 1200, gamesPlayed: 0 });
                         }
                     });
+                    displayRanking();
+                    document.getElementById('choiceSection').style.display = 'block';
+                    displayChoices();
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function handleRankingUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    const uploadedTopics = JSON.parse(content);
+                    topics.length = 0; // Clear existing topics
+                    uploadedTopics.forEach(topic => topics.push(topic));
                     displayRanking();
                     document.getElementById('choiceSection').style.display = 'block';
                     displayChoices();
@@ -134,6 +158,14 @@
                 listItem.textContent = `${topic.name}: ${Math.round(topic.rating)} (Played: ${topic.gamesPlayed} times)`;
                 rankingList.appendChild(listItem);
             });
+        }
+
+        function downloadRanking() {
+            const blob = new Blob([JSON.stringify(topics, null, 2)], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'rankings.json';
+            link.click();
         }
 
         function handleKeyPress(event) {
